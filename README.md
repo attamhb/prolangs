@@ -1,4 +1,4 @@
-# prolangs
+# PROGLANGS
 Personal Programming Knowledge Repository: Organizing Cheatsheets, Tutorials, and Projects
 
 This project aims to create a comprehensive personal knowledge repository for programming. The repository will serve as a centralized collection of cheatsheets, tutorials, and projects related to various programming languages. 
