@@ -1,0 +1,133 @@
+
+
+*  COMMON LISP TUTORIAL
+** What is common LISP
+LISP stands for "List Processing." The name "LISP" reflects the central data structure and processing paradigm of the language, which revolves around linked lists.
+
+*** Lisp Syntax:
+Common Lisp uses a prefix notation known as S-expression syntax. Programs in Common Lisp are written as nested lists of symbols and data.
+
+#+BEGIN_EXAMPLE
+(print "Hello, World!")
+
+(defun factorial (n)
+  (if (<= n 1)
+      1
+      (* n (factorial (- n 1)))))
+
+(print (factorial 5)) ; Output: 120
+
+#+END_EXAMPLE
+
+*** Dynamic Typing:
+Common Lisp is dynamically typed, meaning that variable types are determined at runtime rather than being explicitly declared.
+
+*** Automatic Memory Management:
+Common Lisp features automatic garbage collection, which takes care of memory management, freeing developers from manual memory allocation and deallocation.
+
+*** Macros:
+Common Lisp provides a powerful macro system that allows developers to extend the language itself. Macros enable the creation of domain-specific languages and facilitate metaprogramming.
+
+
+** DATA STRUCTURES
+*** LISTS 
+#+BEGIN_SRC lisp    :results output 
+  (setq numbers '(1 2 3 4 5))
+  (print numbers)
+
+  (setq fruits '(apple banana cherry))
+  (print fruits)
+
+#+END_SRC
+*** ARRAYS
+
+#+BEGIN_SRC lisp    :results output 
+  (setq numbers #(1 2 3 4 5)) ;; create an array
+  (setq fruits #("apple" "banana" "cherry"))
+#+END_SRC
+*** HASH TABLES
+#+BEGIN_SRC lisp    :results output 
+
+  (setq my-hash (make-hash-table :test 'equal))
+  (puthash 'name "John" my-hash)
+  (puthash 'age 30 my-hash)
+
+  (print (gethash 'name my-hash)) ; Output: "John"
+  (print (gethash 'age my-hash)) ; Output: 30
+  
+#+END_SRC
+*** VECTORS
+#+BEGIN_SRC lisp    :results output 
+
+
+#+END_SRC
+*** QUES & STACKS
+
+** OPERATIONS 
+
+*** Arithmetic Operations:
+
+- Addition: (+ 2 3) ; Output: 5
+- Subtraction: (- 5 2) ; Output: 3
+- Multiplication: (* 4 5) ; Output: 20
+- Division: (/ 10 2) ; Output: 5
+
+*** Comparison Operations:
+
+- Equality: (= 5 5) ; Output: T
+- Inequality: (/= 4 2) ; Output: T
+- Greater Than: (> 6 3) ; Output: T
+- Less Than: (< 2 4) ; Output: T
+
+*** String Operations:
+
+- Concatenation: (concatenate 'string "Hello" " " "World") ;
+  Output: "Hello World"
+
+- Substring: (subseq "Lisp Programming" 5 14) ;
+  Output: "Programming"
+
+*** List Operations:
+- Cons: (cons 1 '(2 3)) ; Output: (1 2 3)
+- Car: (car '(1 2 3)) ; Output: 1
+- Cdr: (cdr '(1 2 3)) ; Output: (2 3)
+- Append: (append '(1 2) '(3 4)) ; Output: (1 2 3 4)
+- Push:
+
+*** Looping and Iteration:
+
+Loop: (loop for i from 1 to 5 do (print i)) ; Output: 1 2 3 4 5
+Map: (mapcar #'(lambda (x) (* x 2)) '(1 2 3 4 5)) ; Output: (2 4 6 8 10)
+
+*** File Operations:
+
+Reading a File: (with-open-file (stream "file.txt") (do ((line (read-line stream nil) (read-line stream nil))) ((null line)) (print line)))
+Writing to a File: (with-open-file (stream "output.txt" :direction :output) (format stream "Hello, World!"))
+
+*** Random Number Generation:
+
+(random 10) ; Output: Random number between 0 and 9
+These are just a few examples of the operations available in Common Lisp. Common Lisp provides a rich standard library with a wide range of functions to perform mathematical operations, string manipulations, list operations, file operations, and more. Additionally, Common Lisp allows defining user-defined functions and macros to extend its capabilities.
+ 
+** CONDITIONALS
+
+** LOOPS  
+
+** FUNCTIONS
+
+**  MACROS
+Macros allow us to define and use new language constructs, extend the syntax and semantics of the language itself.
+
+#+BEGIN_SRC    lisp :results output 
+
+  (defmacro simple-incf (var)
+    (list ’setq var (list ’+ var 1)))
+
+  (setf a 7)
+  (simple-incf a)
+  
+#+END_SRC
+** OOPS
+
+** EMACS LISP
+ 
