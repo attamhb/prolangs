@@ -1,5 +1,5 @@
 (undo-tree-save-format-version . 1)
-"538666244803d3041040ceb06af5c8cfd4e32560"
+"98718db204bbd0eb02fc0c627e9962d8a2918680"
 [nil nil nil nil (25732 41327 908158 951000) 0 nil]
 ([nil nil ((130 . 131) (129 . 130) (t 25732 40527 210113 349000) 129) nil (25732 41327 908156 665000) 0 nil])
 ([nil nil ((132 . 133) (131 . 132) 131) nil (25732 41327 908154 470000) 0 nil])
@@ -10,6 +10,8 @@
 " 0 1 (fontified t line-prefix "" wrap-prefix "")) . 131) (undo-tree-id12 . -1) (undo-tree-id13 . -1)) nil (25732 41327 908147 746000) 0 nil])
 ([nil nil ((#("
 " 0 1 (fontified t line-prefix "" wrap-prefix "")) . 131) (undo-tree-id0 . 1) (undo-tree-id1 . -1) (undo-tree-id2 . -1) (undo-tree-id3 . -1) (undo-tree-id4 . -1) (undo-tree-id5 . -1) (undo-tree-id6 . -1) (undo-tree-id7 . -1) (undo-tree-id8 . -1) (undo-tree-id9 . -1) (undo-tree-id10 . -1) (undo-tree-id11 . -1)) nil (25732 41327 908141 55000) 0 nil])
-([nil current ((#("
+([nil nil ((#("
 " 0 1 (fontified t line-prefix "" wrap-prefix "")) . 131) (undo-tree-id15 . 1) (t 25732 41327 916746 192000)) nil (25732 41634 221410 40000) 0 nil])
+([nil current ((#("
+" 0 1 (fontified t line-prefix "" wrap-prefix "")) . 131) (undo-tree-id16 . 1) (t 25732 41634 220735 89000)) nil (25732 42180 917836 586000) 0 nil])
 nil

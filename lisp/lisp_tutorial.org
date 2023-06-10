@@ -4,7 +4,6 @@ By: *David S. Touretzky Carnegie Mellon University*
 
 
 
-
 *  COMMON LISP TUTORIAL
 ** What is common LISP
 LISP stands for "List Processing." The name "LISP" reflects the central data
