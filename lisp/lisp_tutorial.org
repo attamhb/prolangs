@@ -284,6 +284,161 @@ than or equal to its second input.
 
 ** Variables and Side EFFECTS
 
+*** LOCAL AND GLOBAL VARIABLES
+- Scope:
+  - Local: Their scope is restricted to the body of the function
+  - Global: 
+*** SETF ASSIGNS A VALUE TO A VARIABLE
+
+#+BEGIN_SRC lisp    :results output 
+  (setf vowels '(a e i o u))
+  (length vowels)
+  (rest vowels)
+  (setf vowels
+        '(a e i o u and sometimes y))
+  (rest (rest vowels))
+
+  (setf long-list '(a b c d e f g h i))
+  (setf haid (rest long-list))
+  (setf tail (rest long-list))
+
+  (cons head tail)
+  (list head tail)
+
+
+#+END_SRC
+*** THE LET SPECIAL FUNCTION
+We can use LET to create this local variable and give it the desired initial
+value. Then, in the body of the LET form, we can compute the average.
+
+#+BEGIN_SRC lisp    :results output 
+
+  (defun average (x y)
+    (let ((sum (+ x y)))
+      (list x y 'average ’is (/ sum 2.0))))
+
+  (defun switch-billing (x)
+    (let ((star (first x))
+          (co-star (third x)))
+      (list co-star ’accompanied ’by star)))
+
+
+#+END_SRC
+*** THE LET* SPECIAL FUNCTION
+
+The LET* special function is similar to LET, except it creates the local
+variables one at a time instead of all at once. 
+
+#+BEGIN_SRC lisp    :results output 
+
+  (defun price-change (old new)
+    (let* ((diff (- new old))
+           (proportion (/ diff old))
+           (percentage (* proportion 100.0)))
+      (list wwidgets 'changed 'by percentage
+             ’percent)))
+
+  (price-change 1.25 1.35)
+
+
+#+END_SRC
+
+
+
+
+
+** Applicative Programming
+
+*** FUNCALL
+
+#+BEGIN_SRC lisp    :results output 
+
+(funcall #'cons 'a 'b)
+(setf fn #’cons)
+fn
+(type-of fn)
+(funcall fn 'c 'd)
+
+#+END_SRC lisp    
+
+*** THE MAPCAR OPERATOR
+
+#+BEGIN_SRC lisp    :results output 
+  (defun square (n)
+    (* n n))
+
+  (mapcar #'square '(1 2 3 4 5))
+
+#+END_SRC
+
+*** MANIPULATING TABLES WITH MAPCAR
+
+#+BEGIN_SRC lisp    :results output 
+  (setf words
+        '((one un)
+          (two deux)
+          (three trois)
+          (four quatre)
+          (five cinq)))
+
+
+  (mapcar #'first words)
+  (mapcar #'second words)
+  (mapcar #'reverse words)
+
+  (defun translate (x)
+    (second (assoc x words)))
+  (mapcar #'translate '(three one four one five))
+  (TROIS UN QUATRE UN CINQ)
+
+#+END_SRC
+
+*** LAMBDA EXPRESSIONS
+
+#+BEGIN_SRC lisp    :results output 
+  (lambda (n) (* n n))
+  (mapcar #'(lambda (n) (* n n)) '(1 2 3 4 5))
+  (mapcar #'(lambda (n) (* n 10)) '(1 2 3 4 5))
+
+#+END_SRC
+
+*** THE FIND-IF OPERATOR
+
+
+#+BEGIN_SRC lisp    :results output 
+  (find-if #'oddp '(2 4 6 7 8 9))
+  (find-if #'(lambda (x) (> x 3))
+           '(2 4 6 7 8 9))
+  
+#+END_SRC
+
+*** WRITING ASSOC WITH FIND-IF
+
+#+BEGIN_SRC lisp    :results output 
+  
+#+END_SRC
+
+*** REMOVE-IF AND REMOVE-IF-NOT
+
+
+#+BEGIN_SRC lisp    :results output 
+  
+#+END_SRC
+
+*** THE REDUCE OPERATOR
+
+
+#+BEGIN_SRC lisp    :results output 
+  
+#+END_SRC
+
+*** EVERY
+
+
+#+BEGIN_SRC lisp    :results output 
+  
+#+END_SRC
+
 ** OOPS
 
 ** EMACS LISP
