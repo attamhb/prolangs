@@ -38,7 +38,6 @@ Common Lisp provides a powerful macro system that allows developers to extend
 the language itself. Macros enable the creation of domain-specific languages and
 facilitate metaprogramming.
 
-
 ** DATA STRUCTURES
 *** LISTS 
 #+BEGIN_SRC lisp    :results output 
@@ -346,7 +345,6 @@ variables one at a time instead of all at once.
 
 
 
-
 ** Applicative Programming
 
 *** FUNCALL
@@ -413,9 +411,18 @@ fn
 #+END_SRC
 
 *** WRITING ASSOC WITH FIND-IF
+ASSOC searches for a table entry with a specified key. We can write a simple
+version of ASSOC that uses FIND-IF to search the table.
 
 #+BEGIN_SRC lisp    :results output 
-  
+
+  (defun my-assoc (key table)
+    (find-if #'(lambda (entry)
+                 (equal key (first entry)))
+             table))
+
+  (my-assoc 'two words)
+
 #+END_SRC
 
 *** REMOVE-IF AND REMOVE-IF-NOT
@@ -429,18 +436,54 @@ fn
 
 
 #+BEGIN_SRC lisp    :results output 
-  
+(reduce #'+ '(1 2 3))
+(reduce #'+ '(10 9 8 7 6))
+(reduce #'+ '(5))
+(reduce #'+ nil)
+(reduce #'* '(2 4 5))
+(reduce #'* '(3 4 0 7))
+(reduce #'* '(8))
 #+END_SRC
 
 *** EVERY
 
-
 #+BEGIN_SRC lisp    :results output 
-  
+  (every #'numberp '(1 2 3 4 5))
+  (every #'numberp '(1 2 A B C 5))
+  (every #'(lambda (x) (> x 0)) '(1 2 3 4 5))
+  (every #'(lambda (x) (> x 0)) '(1 2 3 -4 5))
+  (every #'oddp nil)
+  (every #'evenp nil)
+  (every #'> '(10 20 30 40) '(1 5 11 23))
 #+END_SRC
 
-** OOPS
+
+
+** Recursion
+
+*** INTRODUCTION
+*** MARTIN AND THE DRAGON
+*** A FUNCTION TO SEARCH FOR ODD NUMBERS
+*** MARTIN VISITS THE DRAGON AGAIN
+*** A LISP VERSION OF THE FACTORIAL FUNCTION
+*** THE DRAGON’S DREAM
+*** A RECURSIVE FUNCTION FOR COUNTING SLICES OF BREAD
+*** THE THREE RULES OF RECURSION
+*** MARTIN DISCOVERS INFINITE RECURSION
+*** INFINITE RECURSION IN LISP
+*** RECURSION TEMPLATES
+*** Single-Test Tail Recursion
+*** Augmenting Recursion
+*** VARIATIONS ON THE BASIC TEMPLATES
+*** List-Consing Recursion
+*** Simultaneous Recursion on Several Variables
+*** Conditional Augmentation
+*** Multiple Recursion
+*** TREES AND CAR/CDR RECURSION
+*** USING HELPING FUNCTIONS
+*** RECURSION IN ART AND LITERATURE
+*** 
+*** 
 
 ** EMACS LISP
- 
 **  
