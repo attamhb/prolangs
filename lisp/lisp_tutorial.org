@@ -229,7 +229,6 @@ instead of IF.
      )
 #+END_SRC
 
-*** COND AND PARENTHESIS ERRORS
 *** THE AND AND OR MACROS
 
 
@@ -341,7 +340,6 @@ variables one at a time instead of all at once.
 
 
 #+END_SRC
-
 
 
 
@@ -458,32 +456,68 @@ version of ASSOC that uses FIND-IF to search the table.
 #+END_SRC
 
 
-
 ** Recursion
 
-*** INTRODUCTION
-*** MARTIN AND THE DRAGON
 *** A FUNCTION TO SEARCH FOR ODD NUMBERS
-*** MARTIN VISITS THE DRAGON AGAIN
-*** A LISP VERSION OF THE FACTORIAL FUNCTION
-*** THE DRAGON’S DREAM
-*** A RECURSIVE FUNCTION FOR COUNTING SLICES OF BREAD
-*** THE THREE RULES OF RECURSION
-*** MARTIN DISCOVERS INFINITE RECURSION
-*** INFINITE RECURSION IN LISP
-*** RECURSION TEMPLATES
-*** Single-Test Tail Recursion
-*** Augmenting Recursion
-*** VARIATIONS ON THE BASIC TEMPLATES
-*** List-Consing Recursion
-*** Simultaneous Recursion on Several Variables
-*** Conditional Augmentation
-*** Multiple Recursion
-*** TREES AND CAR/CDR RECURSION
-*** USING HELPING FUNCTIONS
-*** RECURSION IN ART AND LITERATURE
-*** 
-*** 
 
-** EMACS LISP
-**  
+#+BEGIN_SRC    lisp :results output 
+
+  (defun anyoddp (x)
+    (cond ((null x) nil)
+          ((oddp (first x)) t)
+          (t (anyoddp (rest x)))))
+
+  
+
+#+END_SRC
+
+*** A LISP VERSION OF THE FACTORIAL FUNCTION
+
+#+BEGIN_SRC    lisp :results output 
+
+  (defun fact (n)
+    (cond ((zerop n) 1)
+          (t (* n (fact (- n 1))))))
+  
+#+END_SRC
+
+*** A RECURSIVE FUNCTION FOR COUNTING SLICES OF BREAD
+
+#+BEGIN_SRC    lisp :results output 
+
+  (defun count-slices (loaf)
+    (cond ((null loaf) 0)
+          (t (+ 1 (count-slices (rest loaf))))))
+
+  (dtrace count-slices)
+
+
+#+END_SRC
+
+*** THE THREE RULES OF RECURSION
+
+1. Know when to stop.
+2. Decide how to take one step.
+3. Break the journey down into that step plus a smaller journey.
+
+*** INFINITE RECURSION IN LISP
+
+#+BEGIN_SRC    lisp :results output 
+  (defun fib (n)
+    (+ (fib (- n 1))
+       (fib (- n 2))))
+#+END_SRC
+*** RECURSION TEMPLATES
+Double-Test Tail Recursion
+#+BEGIN_SRC    lisp :results output 
+  (defun anyoddp (x)
+    (cond ((null x) nil)
+          ((oddp (first x)) t)
+          (t (anyoddp (rest x)))))
+#+END_SRC
+
+Single-Test Tail Recursion
+Augmenting Recursion
+
+** Input/Output
+** 
