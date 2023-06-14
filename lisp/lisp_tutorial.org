@@ -342,7 +342,6 @@ variables one at a time instead of all at once.
 #+END_SRC
 
 
-
 ** Applicative Programming
 
 *** FUNCALL
@@ -455,7 +454,6 @@ version of ASSOC that uses FIND-IF to search the table.
   (every #'> '(10 20 30 40) '(1 5 11 23))
 #+END_SRC
 
-
 ** Recursion
 
 *** A FUNCTION TO SEARCH FOR ODD NUMBERS
@@ -520,4 +518,100 @@ Single-Test Tail Recursion
 Augmenting Recursion
 
 ** Input/Output
-** 
+*** THE FORMAT FUNCTION
+The ~% directive causes FORMAT to move to a new line
+The ~& directive tells FORMAT to move to a new line unless it knows it is
+already at the beginning of a new line.
+Another important formatting directive is ~S, which inserts the printed
+representation of a Lisp object into the message that FORMAT prints.
+The ~A directive prints an object without using escape characters.
+
+
+#+BEGIN_SRC lisp    :results output 
+
+  (format t "Hi, mom!")
+  (format t "Time flies~%like an arrow.")
+  (format t "Fruit flies~%~%like bananas.")
+  (defun mary ()
+    (format t "~&Mary had a little bat.")
+    (format t "~&Its wings were long and brown.")
+    (format t "~&And everywhere that Mary went")
+    (format t "~&The bat went, upside-down."))
+  (format t "From ~S to ~S in ~S minutes!"
+          ’boston '(new york) 55)
+  (defun square-talk (n)
+    (format t "~&~S squared is ~S" n (* n n)))
+  (mapcar #'square-talk '(1 2 3 4 5))
+  (defun test (x)
+    (format t "~&With escape characters: ~S" x)
+    (format t "~&Without escape characters: ~A" x))
+
+#+END_SRC
+*** THE READ FUNCTION
+#+BEGIN_SRC lisp    :results output 
+
+  (defun my-square ()
+    (format t "Please type in a number: ")
+    (let ((x (read)))
+      (format t "The number ~S squared is ~S.~%"
+              x (* x x))))
+
+#+END_SRC
+*** THE YES-OR-NO-P FUNCTION
+#+BEGIN_SRC lisp    :results output 
+
+  (defun riddle ()
+    (if (yes-or-no-p
+         "Do you seek Zen enlightenment? ")
+        (format t "Then do not ask for it!")
+        (format t "You have found it.")))
+
+#+END_SRC
+*** EADING FILES WITH WITH-OPEN-FILE and WRITING FILES WITH WITH-OPEN-FILE
+The WITH-OPEN-FILE macro provides a convenient way to read data from a
+file. Its syntax is:
+(WITH-OPEN-FILE (var pathname)
+body)
+
+WITH-OPEN-FILE creates a local variable and sets it to a stream object
+representing a connection to that file.
+
+Stream objects are a special Lisp datatype for describing connections to
+files.
+
+If you want to see one, take a look at the value of the global variable
+#+BEGIN_SRC   lisp :results output 
+ *TERMINAL-IO* 
+#+END_SRC
+ It holds
+the stream object Lisp uses to read from the keyboard and write to the display.
+Here’s what it looks like on my Lisp system:
+
+#+BEGIN_SRC lisp    :results output 
+
+    ;;Let’s try an example of reading data from a file. Suppose the file
+    ;;‘‘timber.dat’’ in the directory /usr/dst contains these lines:*
+    ;; "The North Slope"
+    ;; ((45 redwood) (12 oak) (43 maple))
+    ;;100
+    ;; We can read this data with the following program:
+
+    (defun get-tree-data ()
+      (with-open-file (stream "/usr/dst/timber.dat")
+        (let* ((tree-loc (read stream))
+               (tree-table (read stream))
+               (num-trees (read stream)))
+          (format t "~&There are ~S trees on ~S." num-trees tree-loc)
+          (format t "~&They are: ~S" tree-table))))
+
+    (defun save-tree-data (tree-loc tree-table num-trees)
+      (with-open-file (stream "/usr/dst/timber.newdat"
+                              :direction
+                              :output)
+        (format stream "~S~%" tree-loc)
+        (format stream "~S~%" tree-table)
+        (format stream "~S~%" num-trees)))
+
+#+END_SRC
+
+**  
