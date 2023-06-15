@@ -718,8 +718,10 @@ Here’s what it looks like on my Lisp system:
 
 *** 
 #+BEGIN_SRC lisp    :results output 
+
   (typep 3 'number)
   (type-of 3.5)
+
   (defstruct starship
     (name nil)
     (speed 0)
@@ -728,29 +730,13 @@ Here’s what it looks like on my Lisp system:
   (setf s1 (make-starship))
   (setf s2 '#s(starship speed
                         (warp 3)
-                        condition red
+                        (condition red)
                         shields up))
 
-  
 
 
 
 #+END_SRC
-*** 
-
-*** 
-
-*** 
-
-*** 
-
-** Arrays, Hash Tables, And Property Lists
-
-
-*** 
-
-*** 
-
 *** 
 
 *** 
