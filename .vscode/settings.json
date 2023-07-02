@@ -26,6 +26,16 @@
             "database": "MY_FIRST_DB",
             "username": "lw",
             "password": "Dvguen@2"
+        },
+        {
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "localhost",
+            "database": "my_first_db",
+            "username": "postgres",
+            "password": "Dvguen@2"
         }
     ]
 }
