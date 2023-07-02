@@ -747,14 +747,3 @@ Here’s what it looks like on my Lisp system:
 ** Arrays, Hash Tables, And Property Lists
 
 
-*** 
-
-*** 
-
-*** 
-
-*** 
-
-*** 
-
-*** 
