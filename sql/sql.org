@@ -1,0 +1,449 @@
+* 
+* 
+* UNDERSTANDING DATA TYPES
+**  Intro
+- check the data type specified for each column in each table
+- data dictionary: a document that lists each column; specifies whether it’s a number, character, or other type; and explains the column values.
+- Learn by inspecting the table structures in pgAdmin 
+- understand data types  
+- In a SQL database, each column in a table can hold one and only one data type, which is defined in the CREATE TABLE statement.
+- You declare the data type after naming the column. 
+
+#+begin_src sql :result outputs
+CREATE TABLE eagle_watch (
+observed_date date,
+eagles_seen integer
+);
+
+#+end_src
+
+
+1. Characters: Any character or symbol
+2. Numbers: Includes whole numbers and fractions
+3. Dates and times: Types holding temporal information
+
+** Characters
+- Character string types are general-purpose types suitable for any
+combination of text, numbers, and symbols. 
+- char(n) or character(n): A fixed-length column . 
+- varchar(n) or  varying(n): A variable-length column where the maximum length is specified by n. 
+
+** text
+A variable-length column of unlimited length. The text type is not part of the SQL standard. The flexibility and potential space savings of varchar and text seem to give them an advantage.  computer.
+
+
+
+#+begin_src sql :result outputs
+
+CREATE TABLE char_data_types (
+varchar_column varchar(10),
+char_column char(10),
+text_column text
+);
+INSERT INTO char_data_types
+VALUES
+('abc', 'abc', 'abc'),
+('defghi', 'defghi', 'defghi');
+COPY char_data_types TO 'C:\YourDirectory\typetest.txt'
+WITH (FORMAT CSV, HEADER, DELIMITER '|');
+
+#+end_src
+
+
+- Linux and macOS file paths have a different format. On Linux, my
+  desktop is located at /home/anthony/Desktop/. The directory must exist already; PostgreSQL won't create it for you.
+
+- Format the data in the file with each column separated by a pipe character (|). 
+
+- Using varchar with an n value sufficient to handle outliers is a solid strategy.
+
+** Numbers
+- Number columns hold various types of  numbers, they also allow you to perform calculations on those numbers.    
+
+- The SQL number types include: Integers Whole numbers, both positive and negative Fixed-point and floating-point Two formats of fractions of whole numbers
+
+** Integers
+- These are whole numbers, both positive and negative, including zero.
+- The SQL standard provides three integer types: smallint, integer, and bigint.
+- The difference between the three types is the maximum size of the numbers they can hold. 
+
+** Auto-Incrementing Integers
+- When you add a column with a serial type, PostgreSQL will auto-increment the value in the column each time you insert a row, starting with 1, up to the maximum of each integer type.
+
+- The serial types are implementations of the ANSI SQL standard for auto-numbered identity columns.
+
+- Each database manager implements these in its own way. 
+  
+#+begin_src sql :result outputs
+CREATE TABLE people (
+id serial,
+person_name varchar(100)
+);
+#+end_src
+
+
+
+- makers of databases often employ a serial type to create a unique ID number, also known as a key, for each row in the table.
+- Each row then has its own ID that other tables in the database can reference.
+- Because the column is auto-incrementing, you don't need to insert a number into that column when adding data; PostgreSQL handles that for you.
+  
+- Even though a column with a serial type auto-increments each time a row is added, some scenarios will create gaps in the sequence of numbers in the column. If a row is deleted, for example, the value in that row is never replaced. Or, if a row insert is aborted, the sequence for the column will still be incremented.
+
+** Decimal Numbers
+- Decimals represent a whole number plus a fraction of a whole number; the fraction is represented by digits following a decimal point.
+- In a SQL database, they’re handled by fixed-point and floating-point data types.
+** Fixed-Point Numbers
+- The fixed-point type, also called the arbitrary precision type, is numeric(precision,scale).
+- You give the argument precision as the maximum number of digits to the left and right of the decimal point, and the argument scale as the number of digits allowable on the right of the decimal point.
+- Alternately, you can specify this type using decimal(precision,scale).
+- Both are part of the ANSI SQL standard.
+- If you omit specifying a scale value, the scale will be set to zero; in effect, that creates an integer.
+- If you omit specifying the precision and the scale, the database will store values of any precision and scale up to the maximum allowed.
+- That’s up to 131,072 digits before the decimal point and 16,383 digits after the decimal point.
+
+- To collect rainfall totals from several local airports—not an unlikely data analysis task. The U.S. National Weather Service provides this data with rainfall typically measured to two decimal places.
+
+- To record rainfall in the database using five digits total (the precision) and two digits maximum to the right of the decimal (the scale), you’d specify it as numeric(5,2).
+
+- The database will always return two digits to the right of the decimal point, even if you don't enter a number that contains two digits. 
+
+** Floating-Point Types
+- The two floating-point types are real and double precision.
+- The difference between the two is how much data they store.
+- The real type allows precision to six decimal digits, and double precision to 15 decimal points of precision, both of which include the number of digits on both sides of the point.
+- These floating-point types are also called variable-precision types.
+- The database stores the number in parts representing the digits and an exponent—the location where the decimal point belongs.
+- So, unlike numeric, where we specify fixed precision and scale, the decimal point in a given column can "float" depending on the number.
+
+** Using Fixed- and Floating-Point Types
+- Each type has differing limits on the number of total digits, or precision, it can hold.
+
+- Create a small table and insert a variety of test cases, 
+
+#+begin_src sql :result outputs
+
+CREATE TABLE number_data_types (
+numeric_column numeric(20,5),
+real_column real,
+double_column double precision
+);
+INSERT INTO number_data_types
+VALUES
+(.7, .7, .7),
+(2.13579, 2.13579, 2.13579),
+(2.1357987654, 2.1357987654, 2.1357987654);
+SELECT * FROM number_data_types;
+
+#+end_src
+
+
+** Trouble with Floating-Point Math
+- The way computers store floating-point numbers can lead to unintended mathematical errors. 
+
+#+begin_src sql :result outputs
+SELECT
+numeric_column * 10000000 AS "Fixed",
+real_column * 10000000 AS "Float"
+FROM number_data_types
+WHERE numeric_column = .7;
+#+end_src
+
+- Floating-point types are referred to as "inexact."
+- The reason floating-point math produces such errors is that the computer attempts to squeeze lots of information into a finite number of bits.
+- The storage required by the numeric data type is variable, and depending on the precision and scale specified, numeric can consume considerably more space than the floating-point types.
+- If you're working with millions of rows, it’s worth considering whether you can live with relatively inexact floating-point math.
+
+** Choosing Your Number Data Typw
+1. Use integers when possible. Unless your data uses decimals, stick with integer types.
+2. If you're working with decimal data and need calculations to be exact, choose numeric or its equivalent, decimal. Float types will save space, but the inexactness of floating- point math won't pass muster in many applications. Use them only when exactness is not as important.
+3. Choose a big enough number type. Unless you’re designing a database to hold millions of rows, err on the side of bigger. When using numeric or decimal, set the precision large enough to accommodate the number of digits on both sides of the decimal point. With whole numbers, use bigint unless you're absolutely sure column values will be constrained to fit into the smaller integer or smallint types.
+
+** Dates and Times
+- Whenever you enter a date into a search form, you're reaping the benefit of databases having an awareness of the current time plus the ability to handle formats for dates, times, and the nuances of the calendar, such as leap years and time zones.
+- This is essential for storytelling with data, because the issue of when something occurred is usually as valuable a question as who, what, or how many were involved. PostgreSQL's date and time support includes the four major data.
+- *timetamp* records date and time, which are useful for a range of situations you might track.
+- The format timestamp with time zone is part of the SQL standard.
+- With PostgreSQL you can specify the same data type using timestamptz. timestamp date Records just the date. 
+- *time* records just the time. Again, you’ll want to add the with time zone keywords.
+- *interval* holds a value representing a unit of time expressed in the format quantity unit. It doesn’t record the start or end of a time period, only its length.
+  
+#+begin_src sql :result outputs
+CREATE TABLE date_time_types (
+timestamp_column timestamp with time zone,
+interval_column interval
+);
+INSERT INTO date_time_types
+VALUES
+('2018-12-31 01:00 EST','2 days'),
+('2018-12-31 01:00 -8','1 month'),
+('2018-12-31 01:00 Australia/Melbourne','1 century'),
+(now(),'1 week');
+SELECT * FROM date_time_types;
+#+end_src
+
+** Using the interval Data Type in Calculations
+
+#+begin_src sql :result outputs
+SELECT
+timestamp_column
+interval_column,
+timestamp_column - interval_column AS new_date
+FROM date_time_types;
+#+end_src
+
+** Miscellaneous Types
+- A Boolean type that stores a value of true or false
+- Geometric types that include points, lines, circles, and other two-dimensional objects Network address types, such as IP or MAC addresses
+- A Universally Unique Identifier (UUID) type, sometimes used as a unique key value in tables XML and JSON data types that store information in those structured formats.
+
+** Transforming Values from One Type to Another with CAST
+The CAST() function only succeeds when the target data type can
+accommodate the original value. Casting an integer as text is possible, because the character types can include numbers. Casting text with letters of the alphabet as a number is not.
+
+#+begin_src sql :result outputs
+SELECT timestamp_column, CAST(timestamp_column AS varchar(10))
+FROM date_time_types;
+SELECT numeric_column,
+CAST(numeric_column AS integer),
+CAST(numeric_column AS varchar(6))
+FROM number_data_types;
+SELECT CAST(char_column AS integer) FROM char_data_types;
+#+end_src
+
+** CAST Shortcut Notation
+- PostgreSQL also offers a less-obvious shortcut notation that takes less space: the double colon.
+- Insert the double colon in between the name of the column and the data type you want to convert it to. 
+#+begin_src sql :result outputs
+cast timestamp_column as a varchar:
+SELECT timestamp_column, CAST(timestamp_column AS varchar(10))
+FROM date_time_types;
+SELECT timestamp_column::varchar(10)
+FROM date_time_types;
+
+#+end_src
+- Double colon is a PostgreSQL-only implementation not found in other SQL variants.
+
+* IMPORTING AND EXPORTING DATA
+
+** Intro
+
+- PostgreSQL can import the data in bulk via its COPY command.
+
+- This command is a PostgreSQL-specific implementation
+  
+- COPY will also export data from PostgreSQL tables or from the result of a query to a delimited text file.
+
+- Three steps form the outline of most of the imports
+
+- Prep the source data in the form of a delimited text file, create a table to store the data, write a COPY script to perform the import.
+
+** Working with Delimited Text Files
+
+- A delimited text file contains rows of data, and each row represents one row in a table. In each row, a character separates, or delimits, each data column.
+
+#+begin_src csv :result outputs
+John,Doe,123 Main St.,Hyde Park,NY,845-555-1212
+#+end_src
+
+** Quoting Columns that Contain Delimiters
+- Delimited files wrap columns that contain a delimiter character with an arbitrary character called a text qualifier that tells SQL to ignore the delimiter character held within.
+- Most of the time in comma-delimited files the text qualifier used is the double quote. 
+
+#+begin_src csv :result outputs
+John,Doe,"123 Main St., Apartment 200",Hyde Park,NY,845-555-1212
+#+end_src
+- PostgreSQL by default ignores delimiters inside double-quoted columns
+- You can specify a different text qualifier if your import requires it. 
+
+** Handling Header Rows
+
+- Header row is a single row at the top, or head, of the file that lists the name of each data field.
+#+begin_src csv :result outputs
+FIRSTNAME,LASTNAME,STREET,CITY,STATE,PHONE
+John,Doe,"123 Main St., Apartment 200",Hyde Park,NY,845-555-1212
+#+end_src
+
+- The values in the header row identify the data in each column
+- PostgreSQL doesn't use the header row, we don’t want that row imported to a table. 
+**  Using COPY to Import Data
+- To import data from an external file, check out a source CSV file
+- Build the table in PostgreSQL to hold the data
+- Thereafter, the SQL statement for the import is relatively simple. 
+#+begin_src sql :result outputs
+COPY table_name
+FROM '/Users/anthony/Desktop/my_file.csv'
+-- FROM 'C:\YourDirectory\your_file.csv'
+WITH (FORMAT CSV, HEADER);
+#+end_src
+** File format, Presence of a header row, Delimiter, Quote character
+- Use the FORMAT format_name option to specify the type of file you're reading or writing. 
+- Format names are CSV, TEXT, or BINARY. 
+- On import, use HEADER to specify that the source file has a header row.
+- You can also specify it longhand as HEADER ON, which tells the database to start importing with the second line of the file, preventing the unwanted import of the header. 
+- The delimiter must be a single character and cannot be a carriage return. 
+- PostgreSQL uses the double quote, but if the CSV you're importing uses a different character, you can specify it with the QUOTE 'quote_character' option. 
+** Importing Census Data Describing Counties
+- It contains census data about every county in the United States and is 3,143 rows deep and 91 columns wide.
+- Every 10 years, the government conducts a full count of the population—one of several ongoing programs by the Census Bureau to collect demographic data.
+- Each household in America receives a questionnaire about each person in it—their age, gender, race, and whether they are Hispanic or not.
+- The U.S. Constitution mandates the count to determine how many members from each state make up the U.S. House of Representatives.
+- Based on the 2010 Census, for example, Texas gained four seats in the House while New York and Ohio lost two seats each.
+- Although apportioning House seats is the count’s main purpose, the data’s also a boon for trend trackers studying the population.
+- Download the us_counties_2010.csv file from https://www.nostarch.com/practicalSQL/ and save it to a folder on your computer. 
+ #+begin_src csv  :result outputs
+NAME,STUSAB,SUMLEV,REGION,DIVISION,STATE,COUNTY --snip--
+#+end_src
+
+** Creating the us_counties_2010 Table
+- To import it properly, you’ll need to download the full table definition.
+
+#+begin_src sql :result outputs
+CREATE TABLE us_counties_2010 (
+geo_name varchar(90),
+state_us_abbreviation varchar(2),
+summary_level varchar(3),
+region smallint,
+division smallint,
+state_fips varchar(2),
+county_fips varchar(3),
+area_land bigint,
+area_water bigint,
+population_count_100_percent integer,
+housing_unit_count_100_percent integer,
+internal_point_lat numeric(10,7),
+internal_point_lon numeric(10,7),
+p0010001 integer,
+p0010002 integer,
+p0010003 integer,
+p0010004 integer,
+p0010005 integer,
+--snip--
+p0040049 integer,
+p0040065 integer,
+p0040072 integer,
+h0010001 integer,
+h0010002 integer,
+h0010003 integer
+);
+
+SELECT * from us_counties_2010;
+#+end_src
+
+** Census Columns and Data Types
+labels as opposed to numbers used for math.
+
+** Performing the Census Import with COPY
+
+#+begin_src sql :result outputs
+COPY us_counties_2010
+FROM 'C:\YourDirectory\us_counties_2010.csv'
+WITH (FORMAT CSV, HEADER);
+-- Query returned successfully: 3143 rows affected
+
+SELECT * FROM us_counties_2010;
+
+SELECT geo_name, state_us_abbreviation, area_land
+FROM us_counties_2010
+ORDER BY area_land DESC
+LIMIT 3;
+
+SELECT geo_name, state_us_abbreviation, internal_point_lon
+FROM us_counties_2010
+ORDER BY internal_point_lon DESC
+LIMIT 5;
+#+end_src
+- Use a LIMIT clause to return the number of rows you want
+
+** Importing a Subset of Columns with COPY
+- If a CSV file doesn't have data for all the columns in your target database table, you can still import the data you have by specifying which columns are present in the data.
+#+begin_src sql :result outputs
+
+CREATE TABLE supervisor_salaries (
+town varchar(30),
+county varchar(30),
+supervisor varchar(30),
+start_date date,
+salary money,
+benefits money
+);
+
+COPY supervisor_salaries
+FROM 'C:\YourDirectory\supervisor_salaries.csv'
+WITH (FORMAT CSV, HEADER);
+
+-- ERROR: missing data for column "start_date"
+
+
+
+COPY supervisor_salaries (town, supervisor, salary)
+FROM 'C:\YourDirectory\supervisor_salaries.csv'
+WITH (FORMAT CSV, HEADER);
+#+end_src
+
+** Adding a Default Value to a Column During Import
+- Temporary tables exist only until you end your database session. They're handy for performing intermediary operations on data as part of your processing pipeline; 
+
+#+begin_src sql :result outputs
+
+DELETE FROM supervisor_salaries;
+  
+CREATE TEMPORARY TABLE supervisor_salaries_temp (LIKE supervisor_salaries);
+COPY supervisor_salaries_temp (town, supervisor, salary)
+FROM 'C:\YourDirectory\supervisor_salaries.csv'
+WITH (FORMAT CSV, HEADER);
+INSERT INTO supervisor_salaries (town, county, supervisor, salary)
+SELECT town, 'Some County', supervisor, salary
+FROM supervisor_salaries_temp;
+DROP TABLE supervisor_salaries_temp;
+
+#+end_src
+
+- Create a temporary table called supervisor_salaries_temp
+- Import the supervisor_salaries.csv file into the temporary table
+- Use an INSERT statement to fill the salaries table .
+- Employ a SELECT statement to query the temporary table.
+- Use DROP TABLE to erase the temporary table 
+
+** Using COPY to Export Data
+- The main difference between exporting and importing data with COPY is that rather than using FROM to identify the source data, you use TO for the path and name of the output file.
+- You control how much data to export— an entire table, just a few columns, or to fine-tune it even more, the results of a query. 
+** Exporting All Data
+- The simplest export sends everything in a table to a file.
+- The WITH keyword option tells PostgreSQL to include a header row and use the pipe symbol instead of a comma for a delimiter.
+- I’ve used the .txt file extension here for two
+reasons. First, it demonstrates that you can export to any text file format; second, we’re using a pipe for a delimiter, not a comma. I like to avoid calling files .csv unless they truly have commas as a separator. Remember to change the output directory to your preferred location.
+
+#+begin_src sql :result outputs
+
+
+COPY us_counties_2010
+TO 'C:\YourDirectory\us_counties_export.txt'
+WITH (FORMAT CSV, HEADER, DELIMITER '|');
+#+end_src
+** Exporting Particular Columns
+
+#+begin_src sql :result outputs
+
+COPY us_counties_2010 (geo_name, internal_point_lat, internal_point_lon)
+TO 'C:\YourDirectory\us_counties_latlon_export.txt'
+WITH (FORMAT CSV, HEADER, DELIMITER '|');
+
+#+end_src
+
+** Exporting Query Results
+Additionally, you can add a query to COPY to fine-tune your output. In Listing 4-9 we export the name and state abbreviation of only those counties whose name contains the letters mill in either uppercase or lowercase by using the case-insensitive ILIKE and the % wildcard character we covered in “Using LIKE and ILIKE with WHERE” on page 19.
+
+#+begin_src sql :result outputs
+
+COPY (
+SELECT geo_name, state_us_abbreviation
+FROM us_counties_2010
+WHERE geo_name ILIKE '%mill%'
+)
+TO 'C:\YourDirectory\us_counties_mill_export.txt'
+WITH (FORMAT CSV, HEADER, DELIMITER '|');
+#+end_src
+
+** Importing and Exporting Through pgAdmin
+
+
