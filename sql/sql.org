@@ -445,5 +445,445 @@ WITH (FORMAT CSV, HEADER, DELIMITER '|');
 #+end_src
 
 ** Importing and Exporting Through pgAdmin
+* BASIC MATH AND STATS WITH SQL
+| Operator | Description                                        |
+| +        | Addition                                           |
+| -        | Subtraction                                        |
+| *        | Multiplication                                     |
+| /        | Division (returns the quotient only, no remainder) |
+| %        | Modulo (returns just the remainder)                |
+| ^        | Exponentiation                                     |
+| !        | Factorial                                          |
+
+** Doing Math Across Census Table Columns
+**  Finding Percentages of the Whole
+- Percentage of the whole, divide the number in question by the total.
+- Calculates for each county the percentage of the population that reported their race as Asian
+  
+#+begin_src sql :result outputs
+SELECT geo_name,
+state_us_abbreviation AS "st",
+(CAST (p0010006 AS numeric(8,1)) / p0010001) * 100 AS "pct_asian"
+FROM us_counties_2010
+ORDER BY "pct_asian" DESC;
+#+end_src
+
+**  Tracking Percent Change
+
+- Calculates which departments had the greatest percentage increase and loss:
+#+begin_src sql :result outputs
+CREATE TABLE percent_change (
+department varchar(20),
+spend_2014 numeric(10,2),
+spend_2017 numeric(10,2)
+);
+
+INSERT INTO percent_change
+VALUES
+('Building', 250000, 289000),
+('Assessor', 178556, 179500),
+('Library', 87777, 90001),
+('Clerk', 451980, 650000),
+('Police', 250000, 223000),
+('Recreation', 199000, 195000);
+
+SELECT department,
+spend_2014,
+spend_2017,
+round( (spend_2017 - spend_2014) /
+spend_2014 * 100, 1) AS "pct_change"
+FROM percent_change;
+#+end_src
+
+** Aggregate Functions for Averages and Sums
+#+begin_src sql :result outputs
+SELECT sum(p0010001) AS "County Sum", 
+       round(avg(p0010001), 0) AS "County Average" 
+FROM us_counties_2010; 
+#+end_src
+
+** Finding the Median with Percentile Functions
+#+begin_src sql :result outputs
+
+CREATE TABLE percentile_test (
+    numbers integer
+);
+
+INSERT INTO percentile_test (numbers) VALUES
+    (1), (2), (3), (4), (5), (6);
+SELECT
+    percentile_cont(.5)
+    WITHIN GROUP (ORDER BY numbers),
+    percentile_disc(.5)
+    WITHIN GROUP (ORDER BY numbers)
+FROM percentile_test;
+
+#+end_src
+
+#+begin_src sql :result outputs
+SELECT sum(p0010001) AS "County Sum",
+       round(avg(p0010001), 0) AS "County Average",
+       percentile_cont(.5)
+       WITHIN GROUP (ORDER BY p0010001) AS "County Median"
+FROM us_counties_2010;
+#+end_src
+
+** Finding Other Quantiles with Percentile Functions
+
+#+begin_src sql :result outputs
+SELECT percentile_cont(array[.25,.5,.75])
+       WITHIN GROUP (ORDER BY p0010001) AS "quartiles"
+FROM us_counties_2010;
+
+SELECT unnest(
+             percentile_cont(array[.25,.5,.75])
+             WITHIN GROUP (ORDER BY p0010001)
+             ) AS "quartiles"
+FROM us_counties_2010;
+#+end_src
+
+** Creating a median() Function
 
 
+#+begin_src sql :result outputs
+
+CREATE OR REPLACE FUNCTION _final_median(anyarray)
+    RETURNS float8 AS
+$$
+    WITH q AS
+    (
+      SELECT val
+      FROM unnest($1) val
+      WHERE VAL IS NOT NULL
+      ORDER BY 1
+      ),
+      cnt AS
+      (
+      SELECT COUNT(*) AS c FROM q
+      )
+      SELECT AVG(val)::float8
+      FROM
+      (
+      SELECT val FROM q
+      LIMIT 2 - MOD((SELECT c FROM cnt), 2)
+      OFFSET GREATEST(CEIL((SELECT c FROM cnt) / 2.0) - 1,0)
+      ) q2;
+$$
+LANGUAGE sql IMMUTABLE;
+
+CREATE AGGREGATE median(anyelement) (
+   SFUNC=array_append,
+   STYPE=anyarray,
+   FINALFUNC=_final_median,
+   INITCOND='{}'
+);
+
+SELECT sum(p0010001) AS "County Sum",
+       round(AVG(p0010001), 0) AS "County Average",
+       median(p0010001) AS "County Median",
+       percentile_cont(.5)
+       WITHIN GROUP (ORDER BY p0010001) AS "50th Percentile"
+FROM us_counties_2010;
+
+#+end_src
+
+** Finding the Mode
+
+#+begin_src sql :result outputs
+SELECT mode() WITHIN GROUP (ORDER BY p0010001)
+FROM us_counties_2010;
+#+end_src
+* JOINING TABLES IN A RELATIONAL DATABASE
+
+- In a relational model, each table typically holds data on one entity and each row in the table describes one of those entities.
+
+- A process known as a table join allows us to link rows in one table to rows in other tables.
+
+- Relational model, help eliminate duplicate data, are easier to maintain, and provide for increased flexibility 
+
+** Linking Tables Using JOIN
+
+- To connect tables in a query, we use a JOIN ... ON statement 
+
+#+begin_src sql :result outputs
+SELECT *
+FROM table_a JOIN table_b
+ON table_a.key_column = table_b.foreign_key_column
+-- ON table_a.key_column >= table_b.foreign_key_column
+#+end_src 
+
+- Name a table
+- Give the JOIN keyword
+- Name a second table
+- The ON keyword follows
+- Specify the columns to use to match values
+
+** Relating Tables with Key Columns
+#+begin_src sql :result outputs
+
+CREATE TABLE departments (
+    dept_id bigserial,
+    dept varchar(100),
+    city varchar(100),
+    CONSTRAINT dept_key PRIMARY KEY (dept_id),
+    CONSTRAINT dept_city_unique UNIQUE (dept, city)
+);
+
+CREATE TABLE employees (
+    emp_id bigserial,
+    first_name varchar(100),
+    last_name varchar(100),
+    salary integer,
+    dept_id integer REFERENCES departments (dept_id),
+    CONSTRAINT emp_key PRIMARY KEY (emp_id),
+    CONSTRAINT emp_dept_unique UNIQUE (emp_id, dept_id)
+);
+
+INSERT INTO departments (dept, city)
+VALUES
+    ('Tax', 'Atlanta'),
+    ('IT', 'Boston');
+
+INSERT INTO employees (first_name, last_name, salary, dept_id)
+VALUES
+     ('Nancy', 'Jones', 62500, 1),
+     ('Lee', 'Smith', 59300, 1),
+     ('Soo', 'Nguyen', 83000, 2),
+     ('Janet', 'King', 95000, 2);
+
+
+#+end_src
+
+** Querying Multiple Tables Using JOIN
+- When joining tables in a query, the database connects rows in both tables where the columns you specified for the join have matching values.
+
+- Can use columns from the joined tables to filter results using a WHERE clause
+
+#+begin_src sql :result outputs
+
+SELECT *
+FROM employees JOIN departments
+ON employees.dept_id = departments.dept_id;
+
+#+end_src
+
+- When you run the query, the results include all values from both tables where values in the dept_id columns match.
+
+** JOIN Types
+
+- *JOIN* Returns rows from both tables where matching values are found in the joined columns of both tables.
+
+- Alternate syntax is *INNER JOIN*.
+
+- *LEFT JOIN* Returns every row from the left table plus rows that match values in the joined column from the right table.
+
+- *RIGHT JOIN* Returns every row from the right table plus rows that match the key values in the key column from the left table. 
+
+- *FULL OUTER JOIN* Returns every row from both tables and matches rows; then joins the rows where values in the joined columns match.
+
+- *CROSS JOIN* Returns every possible combination of rows from both tables.
+
+#+begin_src sql :result outputs
+CREATE TABLE schools_left (
+id integer CONSTRAINT left_id_key PRIMARY KEY,
+left_school varchar(30)
+);
+
+CREATE TABLE schools_right (
+id integer CONSTRAINT right_id_key PRIMARY KEY,
+right_school varchar(30)
+);
+
+INSERT INTO schools_left (id, left_school) VALUES
+(1, 'Oak Street School'),
+(2, 'Roosevelt High School'),
+(5, 'Washington Middle School'),
+(6, 'Jefferson High School');
+
+INSERT INTO schools_right (id, right_school) VALUES
+(1, 'Oak Street School'),
+(2, 'Roosevelt High School'),
+(3, 'Morrison Elementary'),
+(4, 'Chase Magnet Academy'),
+(6, 'Jefferson High School');
+
+#+end_src
+
+** Join
+
+#+begin_src sql :result outputs
+
+SELECT *
+FROM schools_left LEFT JOIN schools_right
+ON schools_left.id = schools_right.id;
+
+#+end_src
+** LEFT JOIN and RIGHT JOIN
+
+#+begin_src sql :result outputs
+
+SELECT *
+FROM schools_left LEFT JOIN schools_right
+ON schools_left.id = schools_right.id;
+
+SELECT *
+FROM schools_left RIGHT JOIN schools_right
+ON schools_left.id = schools_right.id;
+
+#+end_src
+
+** FULL OUTER JOIN
+
+#+begin_src sql :result outputs
+SELECT *
+FROM schools_left FULL OUTER JOIN schools_right
+ON schools_left.id = schools_right.id;
+#+end_src
+
+** CROSS JOIN
+#+begin_src sql :result outputs
+
+SELECT *
+FROM schools_left CROSS JOIN schools_right;
+
+#+end_src
+
+** Using NULL to Find Rows with Missing Values
+
+- Use NULL to show that the value is unknown
+- 
+  #+begin_src sql :result outputs
+   
+    SELECT *
+    FROM schools_left LEFT JOIN schools_right
+    ON schools_left.id = schools_right.id
+    WHERE schools_right.id IS NULL;
+
+  #+end_src
+
+** Three Types of Table Relationships
+
+The three types of table relationships are one to one, one to many, and many to many.
+
+** One-to-One Relationship
+...
+** One-to-Many Relationship
+- In a one-to-many relationship, a key value in the first table will have multiple matching values in the second table's joined column.
+** Many-to-One Relationship
+- In a many-to-many relationship, multiple rows in the first table will have multiple matching rows in the second table. 
+** Selecting Specific Columns in a Join
+- 
+#+begin_src sql :result outputs
+
+SELECT id
+FROM schools_left LEFT JOIN schools_right
+ON schools_left.id = schools_right.id;
+
+
+
+SELECT schools_left.id,
+       schools_left.left_school,
+       schools_right.right_school
+FROM schools_left LEFT JOIN schools_right
+ON schools_left.id = schools_right.id;
+
+
+#+end_src
+Listing 6-10: Querying specific columns in a join
+We simply prefix each column name with the table it comes from, and
+the rest of the query syntax is the same. The result returns the requested
+** Simplifying JOIN Syntax with Table Aliases
+
+- Write more concise code 
+
+#+begin_src sql :result outputs
+
+SELECT lt.id,
+lt.left_school,
+rt.right_school
+FROM schools_left AS lt LEFT JOIN schools_right AS rt
+ON lt.id = rt.id;
+
+#+end_src
+
+** Joining Multiple Tables
+#+begin_src sql :result outputs
+CREATE TABLE schools_enrollment (
+        id integer,
+        enrollment integer
+);
+
+CREATE TABLE schools_grades (
+        id integer,
+        grades varchar(10)
+);
+
+INSERT INTO schools_enrollment (id, enrollment)
+VALUES
+    (1, 360),
+    (2, 1001),
+    (5, 450),
+    (6, 927);
+
+INSERT INTO schools_grades (id, grades)
+VALUES
+    (1, 'K-3'),
+    (2, '9-12'),
+    (5, '6-8'),
+    (6, '9-12');
+
+
+SELECT lt.id, lt.left_school, en.enrollment, gr.grades
+FROM schools_left AS lt LEFT JOIN schools_enrollment AS en
+ON lt.id = en.id
+LEFT JOIN schools_grades AS gr
+ON lt.id = gr.id;
+
+#+end_src
+
+
+** Performing Math on Joined Table Columns
+
+- The math functions we explored in Chapter 5 are just as usable when working with joined tables. We just need to include the table name when referencing a column in an operation, as we did when selecting table columns. If you work with any data that has a new release at regular intervals, you’ll find this concept useful for joining a newly released table to an older one and exploring how values have changed. That’s certainly what I and many journalists do each time a new set of census data is released. We’ll load the new data and try to find patterns in the growth or decline of the population, income, education, and other indicators. Let’s look at how to do this by revisiting the us_counties_2010 table we created in Chapter 4 and loading similar county data from the previous Decennial Census, in 2000, to a new table. Run the code in Listing 6-13, making sure you’ve saved the CSV file somewhere first:
+  
+#+begin_src sql :result outputs
+
+CREATE TABLE us_counties_2000 (
+    geo_name varchar(90),
+    state_us_abbreviation varchar(2),
+    state_fips varchar(2),
+    county_fips varchar(3),
+    p0010001 integer,
+    p0010002 integer,
+    p0010003 integer,
+    p0010004 integer,
+    p0010005 integer,
+    p0010006 integer,
+    p0010007 integer,
+    p0010008 integer,
+    p0010009 integer,
+    p0010010 integer,
+    p0020002 integer,
+    p0020003 integer
+);
+
+COPY us_counties_2000
+FROM 'C:\YourDirectory\us_counties_2000.csv'
+WITH (FORMAT CSV, HEADER);
+
+SELECT c2010.geo_name,
+    2010.state_us_abbreviation AS state,
+    2010.p0010001 AS pop_2010,
+    2000.p0010001 AS pop_2000
+    2010.p0010001 - c2000.p0010001 AS raw_change,
+    round( (CAST(c2010.p0010001 AS numeric(8,1)) - c2000.p0010001)
+    / c2000.p0010001 * 100, 1 ) AS pct_change
+FROM us_counties_2010 c2010 INNER JOIN us_counties_2000 c2000
+ON c2010.state_fips = c2000.state_fips
+AND c2010.county_fips = c2000.county_fips
+AND c2010.p0010001 <> c2000.p0010001
+ORDER BY pct_change DESC;
+
+#+end_src
+
+*  TABLE DESIGN THAT WORKS FOR YOU
